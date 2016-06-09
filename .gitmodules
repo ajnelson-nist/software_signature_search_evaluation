@@ -1,0 +1,6 @@
+[submodule "deps/diskprint_workflow"]
+	path = deps/diskprint_workflow
+	url = https://github.com/ajnelson-nist/diskprint_workflow.git
+[submodule "deps/brownzipf"]
+	path = deps/brownzipf
+	url = https://github.com/ajnelson-nist/brownzipf.git

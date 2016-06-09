@@ -1,0 +1,96 @@
+
+-- This software was developed at the National Institute of Standards
+-- and Technology by employees of the Federal Government in the course
+-- of their official duties. Pursuant to title 17 Section 105 of the
+-- United States Code this software is not subject to copyright
+-- protection and is in the public domain. NIST assumes no
+-- responsibility whatsoever for its use by other parties, and makes
+-- no guarantees, expressed or implied, about its quality,
+-- reliability, or any other characteristic.
+--
+-- We would appreciate acknowledgement if the software is used.
+
+.mode csv
+.separator " & " " \\\\\n"
+
+CREATE TEMPORARY TABLE temp_orderer AS
+  SELECT DISTINCT
+    %BREAKOUT%
+  FROM
+    (
+      SELECT
+        *,
+        docs_by AS docs_by_order_by,
+        CASE
+          WHEN n_grams = "all" THEN " all"
+          ELSE n_grams
+        END AS n_grams_order_by
+      FROM
+        searchers_with_nonzerolen_doc_counts
+    ) AS a
+  ORDER BY
+    %BREAKOUT%_order_by
+;
+
+--debug
+--SELECT * FROM temp_orderer;
+--SELECT '----';
+
+CREATE TEMPORARY TABLE temp_tallies AS
+  SELECT
+    %BREAKOUT%,
+    COUNT(*) AS tally
+  FROM
+    (
+      SELECT DISTINCT
+        searcher_id,
+        %BREAKOUT%
+      FROM
+        searchers_with_nonzerolen_doc_counts
+    ) AS a
+  WHERE
+    searcher_id IN (
+      SELECT DISTINCT
+        searcher_id
+      FROM
+        searchers_with_nonzerolen_doc_counts
+      WHERE
+        %METRIC% = 1.0 AND
+        dataset = "evaluation" AND
+        sequences <> "experiment1"
+    ) AND
+    searcher_id IN (
+      SELECT
+        searcher_id
+      FROM
+        searchers_with_nonzerolen_doc_counts
+      WHERE
+        %METRIC% = 1.0 AND
+        dataset = "m57" AND
+        sequences <> "experiment1"
+    )
+  GROUP BY
+    %BREAKOUT%
+;
+
+--debug
+--SELECT * FROM temp_tallies;
+--SELECT '----';
+
+SELECT
+  %BREAKOUT%,
+  CASE
+    WHEN a.tally IS NULL THEN 0
+    ELSE a.tally
+  END AS tally
+FROM
+  (
+    SELECT
+      o.%BREAKOUT% AS %BREAKOUT%,
+      t.tally AS tally
+    FROM
+      temp_orderer AS o
+        LEFT JOIN temp_tallies AS t
+        ON o.%BREAKOUT% = t.%BREAKOUT%
+  ) AS a
+;

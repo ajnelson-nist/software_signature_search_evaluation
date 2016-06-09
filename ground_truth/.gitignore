@@ -1,0 +1,5 @@
+check_ground_truth_uniqueness.log
+check_versions_counts_consistent.log
+data_*
+ground_truth.mk
+ground_truth.mk.done.log
